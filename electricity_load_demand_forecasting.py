@@ -73,7 +73,7 @@ print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
 
 #number of epoch and batch size
-epochs = 150
+epochs = 200
 batch = 24
 
 model_lstm = Sequential()
@@ -143,7 +143,7 @@ cnn_test_pred_df = pd.DataFrame({
 plt.figure(figsize=(10, 6))
 plt.plot(lstm_test_pred_df['Actual'], label='Actual Demand')
 plt.plot(lstm_test_pred_df['Predicted'], label='Predicted Demand', linestyle='--')
-plt.title('Energy Demand Prediction - Actual vs Predicted')
+plt.title('Energy Demand Prediction using LSTM Model - Actual vs Predicted')
 plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
@@ -152,7 +152,7 @@ plt.legend()
 plt.figure(figsize=(10, 6))
 plt.plot(cnn_test_pred_df['Actual'], label='Actual Demand')
 plt.plot(cnn_test_pred_df['Predicted'], label='Predicted Demand', linestyle='--')
-plt.title('Energy Demand Prediction - Actual vs Predicted')
+plt.title('Energy Demand Prediction using CNN model - Actual vs Predicted')
 plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
@@ -167,18 +167,7 @@ plt.xlabel('Epochs')
 plt.ylabel('MSE')
 plt.show()
 
-#fig, axes = plt.subplots(2, 2, sharex=True, sharey=True,figsize=(22,12))
-#ax1, ax2 = axes[0]
-"""
-ax1.plot(lstm_history.history['loss'], label='Train loss')
-ax1.plot(cnn_history.history['loss'], label='Train loss')
-ax1.legend(loc='best')
-ax1.set_title('CNN')
-ax1.set_xlabel('Epochs')
-ax1.set_ylabel('MSE')
-plt.show()
-"""
-# Evaluate the model
+# Evaluate the models
 from sklearn.metrics import r2_score
 R2_Score_dtr_lstm = round(r2_score(lstm_y_pred, y_test) * 100, 2)
 print("R2 Score for LSTM : ", R2_Score_dtr_lstm,"%")
