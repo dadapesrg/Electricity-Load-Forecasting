@@ -71,9 +71,52 @@ X_test, y_test = create_sequences(test_scaled, target_column, timesteps)
 
 print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
+"""
+#Random forest model
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, classification_report
 
+# Load the dataset
+
+X= df
+y=df['nat_demand'] # Split the data into training and testing sets
+from sklearn.preprocessing import LabelEncoder
+
+# Initialize LabelEncoder
+le = LabelEncoder()
+
+# Fit and transform the data
+y_encod = le.fit_transform(y)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y_encod, test_size=0.2, random_state=0)
+
+# Initialize the RandomForestClassifier
+rf_classifier = RandomForestRegressor(n_estimators=1000, random_state=42)
+#rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Train the model
+rf_classifier.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = rf_classifier.predict(X_test)
+
+from sklearn.metrics import mean_absolute_error
+
+mse = mean_absolute_error(y_test, y_pred)
+#y_pred_ = le.inverse_transform(y_pred)
+print ("Mean Squred Error", mse)
+print("I am here", y_pred)
+# Evaluate the model
+#accuracy = accuracy_score(y_pred, y_test)
+#print(f"Accuracy: {accuracy}")
+
+# Print detailed classification report
+#print(classification_report(y_test, y_pred)) #, target_names=target_column))
+"""
 #number of epoch and batch size
-epochs = 200
+epochs = 1000
 batch = 24
 
 model_lstm = Sequential()
