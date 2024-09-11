@@ -3,7 +3,6 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from flask import Flask, request, jsonify
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
 # Initialize the Flask app
