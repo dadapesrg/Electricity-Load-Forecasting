@@ -25,16 +25,16 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/your-image-name:${{ github.sha }} .
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-model:${{ github.sha }} .
 
     - name: Push the Docker image to Google Container Registry
       run: |
-        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/your-image-name:${{ github.sha }}
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-model:${{ github.sha }} && docker rmi gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-model:${{ github.sha }} gcr.io/your-image-name:${{ github.sha }}
 
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy your-service-name \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/your-image-name:${{ github.sha }} \
+          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-model:${{ github.sha }} gcr.io/electricity-demand-model:${{ github.sha }} \
           --region ${{ secrets.GCP_REGION }} \
           --platform managed \
           --allow-unauthenticated
