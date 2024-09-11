@@ -31,6 +31,7 @@ jobs:
     - name: Build the Docker image
       run: |
         docker build -t gcr.io/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} .
+        docker tag electricity-demand-forecasting gcr.io//${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting
 
     - name: Push the Docker image to Google Container Registry
       run: |
