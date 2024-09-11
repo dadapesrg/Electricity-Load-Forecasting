@@ -36,12 +36,12 @@ jobs:
 
     - name: Push the Docker image to Google Container Registry
       run: |
-        docker push gcr.io/dataanalysis-418912/electricity-demand-forecasting:latest
+        docker push gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy electricity-demand-forecasting:latest \
-          --image gcr.io/dataanalysis-418912/electricity-demand-forecasting:latest \
+        gcloud run deploy electricity-demand-forecasting-repo:latest \
+          --image gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest \
           --region ${{ env.GCP_REGION }} \
           --platform managed \
           --allow-unauthenticated
