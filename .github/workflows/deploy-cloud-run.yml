@@ -8,7 +8,7 @@ on:
 env:
   GCP_PROJECT_ID: dataanalysis-418912 # TODO: update Google Cloud project id
  # GAR_LOCATION: YOUR_GAR_LOCATION # TODO: update Artifact Registry location
- GCP_REGION: us-central1 # TODO: update Cloud Run service region
+  GCP_REGION: us-central1 # TODO: update Cloud Run service region
 
 jobs:
   build-and-deploy:
