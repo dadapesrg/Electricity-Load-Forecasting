@@ -22,8 +22,8 @@ jobs:
       uses: google-github-actions/setup-gcloud@v1
       with:
         version: 'latest'
-        project-id: ${{ env.GCP_PROJECT_ID }}
-        service-account-key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        project_id: ${{ env.GCP_PROJECT_ID }}
+        install_components: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
         
 
 
