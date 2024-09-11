@@ -4,7 +4,6 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Dense, LSTM, Flatten, TimeDistributed
 from keras.layers import Conv1D, MaxPooling1D
@@ -17,7 +16,7 @@ from tensorflow.keras.layers import Dense, LSTM, Dropout
 # Load the stock data
 df1 = pd.read_csv('data/Continuous_dataset.csv') 
 
-#Use the specified features of the continous dataset
+# Use the specified features of the continous dataset
 features = ['datetime','nat_demand', 'T2M_toc','QV2M_toc',	'TQL_toc',	'W2M_toc', 'T2M_san', 'QV2M_san',\
 'TQL_san',	'W2M_san',	'T2M_dav',	'QV2M_dav',	'TQL_dav',	'W2M_dav']
 
@@ -50,6 +49,10 @@ train_scaled = scaler.fit_transform(train_df)
 # Apply the same transformation to the testing data
 test_scaled = scaler.transform(test_df)
 
+# Save the test data for later use
+test_df.to_csv('data/test_data.csv')
+test_df.to_json('data/test_data.json')
+
 # Convert back to DataFrame for easier manipulation
 train_scaled = pd.DataFrame(train_scaled, columns=train_df.columns, index=train_df.index)
 test_scaled = pd.DataFrame(test_scaled, columns=test_df.columns, index=test_df.index)
@@ -62,61 +65,23 @@ def create_sequences(data, target_col, timesteps=5):
         y.append(data.iloc[i+timesteps][target_col])
     return np.array(X), np.array(y)
 
+# Function for inverse transform the predicted data
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))
+    dummy_array[:, column_index] = data.flatten()
+    return scaler.inverse_transform(dummy_array)[:, column_index]
+
 # Create sequences from the scaled training data
 timesteps = 5
 target_column = 'nat_demand'  # Choose the target variable to predict
-
 X_train, y_train = create_sequences(train_scaled, target_column, timesteps)
 X_test, y_test = create_sequences(test_scaled, target_column, timesteps)
 
 print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
-"""
-#Random forest model
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.metrics import accuracy_score, classification_report
 
-# Load the dataset
-
-X= df
-y=df['nat_demand'] # Split the data into training and testing sets
-from sklearn.preprocessing import LabelEncoder
-
-# Initialize LabelEncoder
-le = LabelEncoder()
-
-# Fit and transform the data
-y_encod = le.fit_transform(y)
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y_encod, test_size=0.2, random_state=0)
-
-# Initialize the RandomForestClassifier
-rf_classifier = RandomForestRegressor(n_estimators=1000, random_state=42)
-#rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-
-# Train the model
-rf_classifier.fit(X_train, y_train)
-
-# Make predictions on the test set
-y_pred = rf_classifier.predict(X_test)
-
-from sklearn.metrics import mean_absolute_error
-
-mse = mean_absolute_error(y_test, y_pred)
-#y_pred_ = le.inverse_transform(y_pred)
-print ("Mean Squred Error", mse)
-print("I am here", y_pred)
-# Evaluate the model
-#accuracy = accuracy_score(y_pred, y_test)
-#print(f"Accuracy: {accuracy}")
-
-# Print detailed classification report
-#print(classification_report(y_test, y_pred)) #, target_names=target_column))
-"""
-#number of epoch and batch size
-epochs = 1000
+# Number of epoch and batch size
+epochs = 100
 batch = 24
 
 model_lstm = Sequential()
@@ -143,14 +108,8 @@ model_lstm.summary()
 # Make predictions on the test set
 lstm_y_pred = model_lstm.predict(X_test)
 
-# Since we scaled all features but are predicting only one, we'll
-# need to inverse transform the predictions using the appropriate feature column.
-def invert_transform(data, shape, column_index, scaler):
-    dummy_array = np.zeros((len(data), shape))
-    dummy_array[:, column_index] = data.flatten()
-    return scaler.inverse_transform(dummy_array)[:, column_index]
-
-# Create a DataFrame to hold predictions and actual values
+# Inverse transform the predictions and actual values to original scales and \
+# create a DataFrame to hold predictions and actual values for lstm model
 lstm_test_pred_df = pd.DataFrame({
     'Actual': invert_transform(y_test, X_train.shape[2], 0, scaler), # Inverse scale the nat_demand
     'Predicted': invert_transform(lstm_y_pred, X_train.shape[2], 0, scaler) #inverse sclae the predictions
@@ -159,7 +118,7 @@ lstm_test_pred_df = pd.DataFrame({
 lr = 0.0003
 adam = keras.optimizers.Adam(lr)
 
-#develope convolusion CNN model for Time Series Forecasting
+# Develope convolusion CNN model for Time Series Forecasting
 adam = keras.optimizers.Adam(lr)
 model_cnn = Sequential()
 model_cnn.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
@@ -176,7 +135,8 @@ cnn_history = model_cnn.fit(X_train, y_train, epochs=epochs, batch_size=batch, v
 # Make predictions on the test set
 cnn_y_pred = model_cnn.predict(X_test)
 
-# Create a DataFrame to hold predictions and actual values
+# Inverse transform the predictions and actual values to original scales and \
+# create a DataFrame to hold predictions and actual values for CNN model
 cnn_test_pred_df = pd.DataFrame({
     'Actual': invert_transform(y_test, X_train.shape[2], 0, scaler), # scaler.inverse_transform(y_test),  # Inverse scale the nat_demand
     'Predicted': invert_transform(cnn_y_pred, X_train.shape[2], 0, scaler) #inversed_predictions #scaler.inverse_transform(np.concatenate([y_pred, np.zeros_like(y_pred)], axis=1))[:, 0]
@@ -191,6 +151,7 @@ plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
 #plt.show() 
+
 # Plotting the actual vs predicted values
 plt.figure(figsize=(10, 6))
 plt.plot(cnn_test_pred_df['Actual'], label='Actual Demand')
@@ -209,6 +170,19 @@ plt.title('Comparison of Train Loss CNN and LSTM model')
 plt.xlabel('Epochs')
 plt.ylabel('MSE')
 plt.show()
+
+# Import library for saving model
+import pickle
+# Save the models to a file
+with open('results/lstm_model.pkl', 'wb') as f:
+    pickle.dump(model_lstm, f)
+
+# Save the scaler
+with open("results/scaler.pkl", "wb") as outfile:
+    pickle.dump(scaler, outfile)
+
+with open('results/cnn_model.pkl', 'wb') as f:
+    pickle.dump(model_cnn, f)
 
 # Evaluate the models
 from sklearn.metrics import r2_score
