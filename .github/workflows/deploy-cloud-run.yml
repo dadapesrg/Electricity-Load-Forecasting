@@ -26,14 +26,12 @@ jobs:
         service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
     - name: Configure Docker to use the gcloud command-line tool as a credential helper
-      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      run: gcloud auth configure-docker
 
     - name: Build the Docker image
       run: |
-        docker build -t electricity-demand-forecasting-repo:latest .
-        docker tag electricity-demand-forecasting-repo:latest gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest
+        docker build -t gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest .
         
-
     - name: Push the Docker image to Google Container Registry
       run: |
         docker push gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest
@@ -42,6 +40,6 @@ jobs:
       run: |
         gcloud run deploy electricity-demand-forecasting-repo:latest \
           --image gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest \
-          --region ${{ env.GCP_REGION }} \
+          --region us-central1 \
           --platform managed \
           --allow-unauthenticated
