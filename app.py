@@ -25,6 +25,10 @@ features = ['nat_demand', 'T2M_toc','QV2M_toc',	'TQL_toc',	'W2M_toc', 'T2M_san',
 # Initialize the scaler
 scaler = MinMaxScaler() #feature_range=(0, 1))
 
+#load the scaler used for training the model
+with open("results/scaler.pkl", "rb") as infile:
+    scaler = pickle.load(infile)
+
  # function to reshape data for LSTM [samples, timesteps, features] prediction as used during the training
 def create_sequences(data, target_col, timesteps=5):
     X, y = [], []
@@ -40,12 +44,8 @@ def invert_transform(data, shape, column_index, scaler):
     return scaler.inverse_transform(dummy_array)[:, column_index]
 
 # Prediction function
-def make_prediction(input_data):
+def make_prediction(input_data, scaler):
         
-    #load the scaler used for training the model
-    with open("results/scaler.pkl", "rb") as infile:
-        scaler = pickle.load(infile)
-    
     # Scale the data since scaler was used for the training)
     input_data_scaled = scaler.transform(input_data)
     test_data_scaled = pd.DataFrame(input_data_scaled, columns=input_data.columns, index=input_data.index)
@@ -75,7 +75,7 @@ def predict():
    
     # Perform the prediction
     try:
-        prediction = make_prediction(input_data)
+        prediction = make_prediction(input_data, scaler)
         
         response = {
             'status': 'success',
