@@ -5,19 +5,24 @@ on:
     branches:
       - main  # Deploys only on push to the main branch
 
+env:
+  GCP_PROJECT_ID: dataanalysis-418912 # TODO: update Google Cloud project id
+ # GAR_LOCATION: YOUR_GAR_LOCATION # TODO: update Artifact Registry location
+ GCP_REGION: us-central1 # TODO: update Cloud Run service region
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0
+      uses: google-github-actions/setup-gcloud@v1
       with:
         version: 'latest'
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        project_id: ${{ env.GCP_PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
     - name: Configure Docker to use the gcloud command-line tool as a credential helper
@@ -25,16 +30,16 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} .
+        docker build -t gcr.io/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} .
 
     - name: Push the Docker image to Google Container Registry
       run: |
-        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }}
+        docker push gcr.io/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }}
 
     - name: Deploy to Cloud Run
       run: |
         gcloud run deploy electricity-demand-forecasting \
-          --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} \
-          --region ${{ secrets.GCP_REGION }} \
+          --image gcr.io/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} \
+          --region ${{ env.GCP_REGION }} \
           --platform managed \
           --allow-unauthenticated
