@@ -30,7 +30,7 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} .
+        docker build -t electricity-demand-forecasting:${{ github.sha }} .
         docker tag electricity-demand-forecasting:${{ github.sha }} us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }}
 
     - name: Push the Docker image to Google Container Registry
