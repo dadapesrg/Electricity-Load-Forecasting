@@ -24,6 +24,8 @@ jobs:
         version: 'latest'
         project_id: ${{ env.GCP_PROJECT_ID }}
         service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        export_default_credentials: true
+
 
     - name: Configure Docker to use the gcloud command-line tool as a credential helper
       run: gcloud auth configure-docker
