@@ -30,17 +30,18 @@ jobs:
 
     - name: Build the Docker image
       run: |
-        docker build -t electricity-demand-forecasting:${{ github.sha }} .
-        docker tag electricity-demand-forecasting:${{ github.sha }} us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }}
+        docker build -t electricity-demand-forecasting-repo:latest .
+        docker tag electricity-demand-forecasting-repo:latest gcr.io/dataanalysis-418912/electricity-demand-forecasting-repo:latest
+        
 
     - name: Push the Docker image to Google Container Registry
       run: |
-        docker push us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }}
+        docker push gcr.io/dataanalysis-418912/electricity-demand-forecasting:latest
 
     - name: Deploy to Cloud Run
       run: |
-        gcloud run deploy electricity-demand-forecasting \
-          --image us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/electricity-demand-forecasting:${{ github.sha }} \
+        gcloud run deploy electricity-demand-forecasting:latest \
+          --image gcr.io/dataanalysis-418912/electricity-demand-forecasting:latest \
           --region ${{ env.GCP_REGION }} \
           --platform managed \
           --allow-unauthenticated
