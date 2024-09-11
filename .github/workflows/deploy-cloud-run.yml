@@ -21,7 +21,7 @@ jobs:
         service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
     - name: Configure Docker to use the gcloud command-line tool as a credential helper
-      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      run: gcloud auth configure-docker
 
     - name: Build the Docker image
       run: |
