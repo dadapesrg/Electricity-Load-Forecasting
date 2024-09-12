@@ -16,14 +16,14 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v0
+      uses: google-github-actions/setup-gcloud@v2
       with:
         version: 'latest'
         project_id: ${{ env.GCP_PROJECT_ID }}
-        install_components: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
         
 
 
