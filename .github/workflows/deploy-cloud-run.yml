@@ -23,7 +23,7 @@ jobs:
       with:
         version: 'latest'
         project_id: ${{ env.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
         
 
 
