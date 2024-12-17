@@ -16,15 +16,18 @@ from tensorflow.keras.layers import Dense, LSTM, Dropout
 # Load the stock data
 df1 = pd.read_csv('data/Continuous_dataset.csv') 
 
+# Print the shape of the dataset
+print(df1.info())
 # Print the first 5 rows
 print(df1.head())
 
+# Print the last 5 rows
+print(df1.tail())
 
 # Use the specified features of the continous dataset
 features = ['datetime','nat_demand', 'T2M_toc','QV2M_toc',	'TQL_toc',	'W2M_toc', 'T2M_san', 'QV2M_san',\
 'TQL_san',	'W2M_san',	'T2M_dav',	'QV2M_dav',	'TQL_dav',	'W2M_dav']
 
-#data = df1[features].values
 df = df1[features]
 print(df.head)
 
@@ -61,7 +64,7 @@ test_df.to_json('data/test_data.json')
 train_scaled = pd.DataFrame(train_scaled, columns=train_df.columns, index=train_df.index)
 test_scaled = pd.DataFrame(test_scaled, columns=test_df.columns, index=test_df.index)
 
-#Create model sequence
+#Create model data sequence
 def create_sequences(data, target_col, timesteps=5):
     X, y = [], []
     for i in range(len(data) - timesteps):
@@ -77,7 +80,7 @@ def invert_transform(data, shape, column_index, scaler):
 
 # Create sequences from the scaled training data
 timesteps = 5
-target_column = 'nat_demand'  # Choose the target variable to predict
+target_column = 'nat_demand'  # This is the target variable to predict
 X_train, y_train = create_sequences(train_scaled, target_column, timesteps)
 X_test, y_test = create_sequences(test_scaled, target_column, timesteps)
 
@@ -88,6 +91,7 @@ print("Training Labels Shape (y_train):", y_train.shape)
 epochs = 100
 batch = 24
 
+# Define the LSTM model
 model_lstm = Sequential()
 # Add LSTM layers with Dropout regularization
 model_lstm.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
@@ -101,8 +105,8 @@ model_lstm.add(Dense(units=25))
 model_lstm.add(Dense(units=1))  # Output layer, predicting the 'close' price
 
 # Compile the model
-
 model_lstm.compile(optimizer='adam', loss='mean_squared_error')
+
 # Train the model
 lstm_history = model_lstm.fit(X_train, y_train, batch_size = batch, epochs=epochs, verbose=2) 
 
@@ -119,10 +123,11 @@ lstm_test_pred_df = pd.DataFrame({
     'Predicted': invert_transform(lstm_y_pred, X_train.shape[2], 0, scaler) #inverse sclae the predictions
 })
 
+# Define the learning rate and optimizer
 lr = 0.0003
 adam = keras.optimizers.Adam(lr)
 
-# Develope convolusion CNN model for Time Series Forecasting
+# Define the convolusion neural network (CNN) model for Time Series Forecasting
 adam = keras.optimizers.Adam(lr)
 model_cnn = Sequential()
 model_cnn.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
@@ -132,8 +137,10 @@ model_cnn.add(Dense(50, activation='relu'))
 model_cnn.add(Dense(1))
 model_cnn.compile(loss='mse', optimizer=adam)
 
+# Print model summary
 model_cnn.summary()
 
+# Train the model
 cnn_history = model_cnn.fit(X_train, y_train, epochs=epochs, batch_size=batch, verbose=2)
 
 # Make predictions on the test set
@@ -146,7 +153,7 @@ cnn_test_pred_df = pd.DataFrame({
     'Predicted': invert_transform(cnn_y_pred, X_train.shape[2], 0, scaler) #inversed_predictions #scaler.inverse_transform(np.concatenate([y_pred, np.zeros_like(y_pred)], axis=1))[:, 0]
 })
 
-# Plotting the actual vs predicted values
+# Plotting the actual vs predicted values for lstm model
 plt.figure(figsize=(10, 6))
 plt.plot(lstm_test_pred_df['Actual'], label='Actual Demand')
 plt.plot(lstm_test_pred_df['Predicted'], label='Predicted Demand', linestyle='--')
@@ -156,7 +163,7 @@ plt.ylabel('Energy demand)')
 plt.legend()
 #plt.show() 
 
-# Plotting the actual vs predicted values
+# Plotting the actual vs predicted values for the CNN model
 plt.figure(figsize=(10, 6))
 plt.plot(cnn_test_pred_df['Actual'], label='Actual Demand')
 plt.plot(cnn_test_pred_df['Predicted'], label='Predicted Demand', linestyle='--')
@@ -166,6 +173,7 @@ plt.ylabel('Energy demand)')
 plt.legend()
 #plt.show()
 
+# Plotting the train loss for both models
 plt.figure(figsize=(10, 6))
 plt.plot(lstm_history.history['loss'], label='Train loss')
 plt.plot(cnn_history.history['loss'], label='Train loss')
@@ -177,6 +185,8 @@ plt.show()
 
 # Import library for saving model
 import pickle
+
+# Save the lstm model to a file
 # Save the models to a file
 with open('results/lstm_model.pkl', 'wb') as f:
     pickle.dump(model_lstm, f)
@@ -185,6 +195,7 @@ with open('results/lstm_model.pkl', 'wb') as f:
 with open("results/scaler.pkl", "wb") as outfile:
     pickle.dump(scaler, outfile)
 
+# Save the cnn model to a file
 with open('results/cnn_model.pkl', 'wb') as f:
     pickle.dump(model_cnn, f)
 
