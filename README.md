@@ -1,5 +1,5 @@
 # Electricity Load Forecasting Project
-This electricity load forecasting project aims at developing machine learning models using different algorithms such as LSTM, CNN, RNN, etc. The main objective is to develop, train and test different AI models for forecasting electricity load demand.
+This electricity load forecasting project aims at developing machine learning models using different algorithms such as LSTM and CNN. The main objective is to develop, train and test different AI models for forecasting electricity load demand.
 The trained models are deployed to the cloud using Google and AWS Cloud infrastructures. 
 The project code directory consists of the following:
 1. data: Store the data for training the models. The data used for the project was obtained from https://www.kaggle.com/
