@@ -167,6 +167,7 @@ def visualize_model_metrics(df, title="Model Evalation", xlabel="X-axis", ylabel
     plt.xticks(rotation=45)
     plt.legend(loc='best')
     plt.tight_layout()
+    plt.savefig('plots/model_comparison.png')
     plt.show()
 
 # Visualize the model metrics
@@ -182,6 +183,7 @@ add_plot_labels(list(rmse_scores.keys()), list(rmse_scores.values()))
 plt.xlabel('') 
 plt.ylabel('RMSE') 
 plt.title('Models') 
+plt.savefig('plots/model_RMSE_comparison.png')
 plt.show()
 
 # Visualize the predictions
@@ -235,4 +237,6 @@ def add_plot(x,y):
 add_plot(list(predictions.keys()), list(predictions.values()))  
 
 plt.tight_layout()
+plt.savefig('plots/predictions.png')
 plt.show()
+
