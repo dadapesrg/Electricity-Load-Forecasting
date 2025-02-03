@@ -237,6 +237,6 @@ def add_plot(x,y):
 add_plot(list(predictions.keys()), list(predictions.values()))  
 
 plt.tight_layout()
-plt.savefig('plots/predictions_actual_comparison.png')
+plt.savefig('plots/model_predictions_actual_comparison.png')
 plt.show()
 
