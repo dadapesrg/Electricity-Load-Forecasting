@@ -1,16 +1,16 @@
 # Electricity Load Forecasting Project
 This electricity load forecasting project aims at developing machine learning models using different algorithms such as LSTM, CNN, and classical ML algorithms. The main objective is to develop, train and test different AI models for forecasting electricity load demand.
-The following models have been added to the project:\n
-    a. Convolution Neural Network (CNN) model \n
-    b. Long Short-Term Memory (LSTM) model \n     
-    c. Gradient Boosting model \n 
-    d. Random Forest model \n
-    e. Extreme Gradient Boost model with hyperparameters tuning \n 
-    f. Gradient Boosting model \n
-    g. Random Forest model \n
-    h. Ada Boost model \n
-    i. Linear Regression model \n
-
+The following models have been added to the project:\
+    a. Convolution Neural Network (CNN) model \
+    b. Long Short-Term Memory (LSTM) model \    
+    c. Gradient Boosting model \
+    d. Random Forest model \
+    e. Extreme Gradient Boost model with hyperparameters tuning \ 
+    f. Gradient Boosting model \
+    g. Random Forest model \
+    h. Ada Boost model \
+    i. Linear Regression model \
+    
 The trained models are deployed to the cloud using Google and AWS Cloud infrastructures. 
 The project code directory consists of the following:
 1. data: Store the data for training the models. The data used for the project was obtained from https://www.kaggle.com/
