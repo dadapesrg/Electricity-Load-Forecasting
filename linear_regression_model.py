@@ -66,10 +66,10 @@ test_scaled = pd.DataFrame(test_scaled, columns=test_df.columns, index=test_df.i
 timesteps = 5
 target_column = 'nat_demand'  # This is the target variable to predict
 
-X_train = train_scaled #.drop(columns=[target_column])
+X_train = train_scaled.drop(columns=[target_column])
 y_train = train_scaled[target_column]   
 
-X_test = test_scaled #.drop(columns=[target_column])
+X_test = test_scaled.drop(columns=[target_column])
 y_test = test_scaled[target_column] 
 
 print("Training Data Shape (X_train):", X_train.shape)
@@ -119,3 +119,7 @@ print(f"Accuracy: {accuracy:.3f}")
 import pickle
 with open('results/lr_model.pkl', 'wb') as f:
     pickle.dump(model, f)
+
+# Save the scaler
+with open("results/lr_scaler.pkl", "wb") as outfile:
+    pickle.dump(scaler, outfile)
