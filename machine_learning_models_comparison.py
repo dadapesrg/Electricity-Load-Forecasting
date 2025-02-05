@@ -32,6 +32,56 @@ df.set_index('datetime', inplace=True)
 
 print("Sample Data:\n", df.head())
 
+
+from sklearn.preprocessing import MinMaxScaler
+
+# Initialize the scaler
+scaler = MinMaxScaler()
+
+# Scale the data
+scaled_data = scaler.fit_transform(df)
+
+# Convert back to DataFrame
+df_scaled = pd.DataFrame(scaled_data, columns=df.columns, index=df.index)
+print(df_scaled.head())
+target_col = "nat_demand"
+
+# Create lagged features
+def create_lagged_features(df, target_col, n_lags=3):
+    df_lagged = df.copy()
+    for col in df.columns:
+        for lag in range(1, n_lags + 1):
+            df_lagged[f"{col}_lag{lag}"] = df_lagged[col].shift(lag)
+    df_lagged.dropna(inplace=True)  # Drop rows with NaN due to shifting
+    return df_lagged
+
+# Create lagged features with 3 time steps
+df_lagged = create_lagged_features(df_scaled, target_col, 5)
+print(df_lagged.head())
+
+# Split into features (X) and target (y)
+X = df_lagged.drop(columns=target_col)  # All features except the target
+y = df_lagged[target_col]  # Target variable
+print(X.head())
+print(y.head())
+
+
+# Train-test split
+# Split the data into training and test sets
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+
+split_idx = int(len(X) * 0.8)
+X_train, X_test = X[:split_idx], X[split_idx:]
+y_train, y_test = y[:split_idx], y[split_idx:]
+
+
+"""
+# Set 'Date' as the index
+df.set_index('datetime', inplace=True)
+
+print("Sample Data:\n", df.head())
+
 # Define the split point
 split_fraction = 0.8
 split_index = int(len(df) * split_fraction)
@@ -69,6 +119,8 @@ y_train = train_scaled[target_column]
 
 X_test = test_scaled.drop(columns=[target_column])
 y_test = test_scaled[target_column] 
+
+"""
 
 print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
@@ -167,7 +219,7 @@ def visualize_model_metrics(df, title="Model Evalation", xlabel="X-axis", ylabel
     plt.xticks(rotation=45)
     plt.legend(loc='best')
     plt.tight_layout()
-    plt.savefig('plots/model_comparison.png')
+    plt.savefig('plots/lag_plots/model_comparison.png')
     plt.show()
 
 # Visualize the model metrics
@@ -183,7 +235,7 @@ add_plot_labels(list(rmse_scores.keys()), list(rmse_scores.values()))
 plt.xlabel('') 
 plt.ylabel('RMSE') 
 plt.title('Models') 
-plt.savefig('plots/model_RMSE_comparison.png')
+plt.savefig('plots/lag_plots/model_RMSE_comparison.png')
 plt.show()
 
 # Visualize the predictions
@@ -237,6 +289,6 @@ def add_plot(x,y):
 add_plot(list(predictions.keys()), list(predictions.values()))  
 
 plt.tight_layout()
-plt.savefig('plots/model_predictions_actual_comparison.png')
+plt.savefig('plots/lag_plots/model_predictions_actual_comparison.png')
 plt.show()
 

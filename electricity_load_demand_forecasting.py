@@ -4,14 +4,12 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
-from keras.layers import Dense, LSTM, Flatten, TimeDistributed
-from keras.layers import Conv1D, MaxPooling1D
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, LSTM, Dropout
+
 import matplotlib.pyplot as plt
 import keras.optimizers
 
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, LSTM, Dropout
 
 # Load the stock data
 df1 = pd.read_csv('data/Continuous_dataset.csv') 
@@ -36,6 +34,40 @@ df.set_index('datetime', inplace=True)
 
 print("Sample Data:\n", df.head())
 
+
+# Normalize the features (Recommended for LSTM)
+scaler = MinMaxScaler()
+df_scaled = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+
+# Define sequence length
+time_steps = 7  # Number of previous time steps to consider
+target_column = 'nat_demand'  # The variable to predict
+
+# Function to create sequences
+def create_sequences(dataframe, target_column, time_steps):
+    X, y = [], []
+    for i in range(len(dataframe) - time_steps):
+        X.append(dataframe.iloc[i : i + time_steps].values) #.drop(columns=[target_column]).values)
+        y.append(dataframe.iloc[i + time_steps][target_column])
+    return np.array(X), np.array(y)
+
+# Create sequences
+X, y = create_sequences(df_scaled, target_column, time_steps)
+
+# Reshape X for LSTM (samples, time_steps, features)
+print(f"X shape: {X.shape}")  # (num_samples, time_steps, num_features)
+print(f"y shape: {y.shape}")  # (num_samples,)
+
+# Splitting into train and test sets
+train_size = int(len(X) * 0.8)
+X_train, X_test = X[:train_size], X[train_size:]
+y_train, y_test = y[:train_size], y[train_size:]
+
+print(f"Training set size: {X_train.shape}, Testing set size: {X_test.shape}")
+
+print("Training Data Shape (X_train):", X_train.shape)
+
+"""
 # Define the split point
 split_fraction = 0.8
 split_index = int(len(df) * split_fraction)
@@ -84,6 +116,14 @@ target_column = 'nat_demand'  # This is the target variable to predict
 X_train, y_train = create_sequences(train_scaled, target_column, timesteps)
 X_test, y_test = create_sequences(test_scaled, target_column, timesteps)
 
+"""
+# Function for inverse transform the predicted data
+def invert_transform(data, shape, column_index, scaler):
+    dummy_array = np.zeros((len(data), shape))
+    dummy_array[:, column_index] = data.flatten()
+    return scaler.inverse_transform(dummy_array)[:, column_index]
+print(X_train)
+
 print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
 
@@ -119,8 +159,8 @@ lstm_y_pred = model_lstm.predict(X_test)
 # Inverse transform the predictions and actual values to original scales and \
 # create a DataFrame to hold predictions and actual values for lstm model
 lstm_test_pred_df = pd.DataFrame({
-    'Actual': invert_transform(y_test, X_train.shape[2], 0, scaler), # Inverse scale the nat_demand
-    'Predicted': invert_transform(lstm_y_pred, X_train.shape[2], 0, scaler) #inverse sclae the predictions
+    'Actual': invert_transform(y_test, df.shape[1], 0, scaler), # Inverse scale the nat_demand
+    'Predicted': invert_transform(lstm_y_pred, df.shape[1], 0, scaler) #inverse sclae the predictions
 })
 
 # Define the learning rate and optimizer
@@ -149,8 +189,8 @@ cnn_y_pred = model_cnn.predict(X_test)
 # Inverse transform the predictions and actual values to original scales and \
 # create a DataFrame to hold predictions and actual values for CNN model
 cnn_test_pred_df = pd.DataFrame({
-    'Actual': invert_transform(y_test, X_train.shape[2], 0, scaler), # scaler.inverse_transform(y_test),  # Inverse scale the nat_demand
-    'Predicted': invert_transform(cnn_y_pred, X_train.shape[2], 0, scaler) #inversed_predictions #scaler.inverse_transform(np.concatenate([y_pred, np.zeros_like(y_pred)], axis=1))[:, 0]
+    'Actual': invert_transform(y_test, df.shape[1], 0, scaler), # scaler.inverse_transform(y_test),  # Inverse scale the nat_demand
+    'Predicted': invert_transform(cnn_y_pred, df.shape[1], 0, scaler) #inversed_predictions #scaler.inverse_transform(np.concatenate([y_pred, np.zeros_like(y_pred)], axis=1))[:, 0]
 })
 
 # Plotting the actual vs predicted values for lstm model
@@ -161,6 +201,7 @@ plt.title('Energy Demand Prediction using LSTM Model - Actual vs Predicted')
 plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
+plt.savefig('plots/lstm_model.png')
 #plt.show() 
 
 # Plotting the actual vs predicted values for the CNN model
@@ -171,6 +212,7 @@ plt.title('Energy Demand Prediction using CNN model - Actual vs Predicted')
 plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
+plt.savefig('plots/cnn_model.png')
 #plt.show()
 
 # Plotting the train loss for both models
@@ -181,6 +223,7 @@ plt.legend(loc='best')
 plt.title('Comparison of Train Loss CNN and LSTM model')
 plt.xlabel('Epochs')
 plt.ylabel('MSE')
+plt.savefig('plots/train_loss_comparison.png')
 plt.show()
 
 # Import library for saving model
