@@ -53,7 +53,7 @@ print(df.describe())
 # Select the demand column for analysis
 data = df['ND']  # ND is the column for demand
 
-"""
+# Plot the energy demand data
 # Resample to average values for hourly, daily, weekly and monthly data
 daily_data = data.resample('D').mean()
 weekly_data = data.resample('W').mean() 
@@ -85,7 +85,7 @@ plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
 plt.show()
-"""
+
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
 def adf_test(series):
     result = adfuller(series.dropna())
