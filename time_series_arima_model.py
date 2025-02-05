@@ -76,7 +76,7 @@ plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
 plt.show()
-"""
+
 # Plot the energy demand data
 plt.figure(figsize=(12, 6))
 plt.plot(monthly_data, label="Monthly Energy Demand")
@@ -85,7 +85,7 @@ plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
 plt.show()
-
+"""
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
 def adf_test(series):
     result = adfuller(series.dropna())
