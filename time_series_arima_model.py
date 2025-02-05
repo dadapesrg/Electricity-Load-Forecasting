@@ -20,12 +20,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Load dataset and combine all years data into one dataset
-#year = [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
-#df = pd.read_csv('data/UK_Load_demand_data/demanddata_2011.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
+year = [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+df = pd.read_csv('data/UK_Load_demand_data/demanddata_2011.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
 
 #Use only 2021 to 2025 data to reduce the size of the dataset for ARIMA model
-df = pd.read_csv('data/UK_Load_demand_data/demanddata_2024.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
-year = [2025]
+#df = pd.read_csv('data/UK_Load_demand_data/demanddata_2024.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
+#year = [2025]
 for i in range(len(year)):
     data_path = f'data/UK_Load_demand_data/demanddata_{year[i]}.csv'    
     df_year = pd.read_csv(data_path, parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE') 

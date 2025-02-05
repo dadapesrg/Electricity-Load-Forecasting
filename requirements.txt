@@ -4,3 +4,6 @@ pandas
 numpy
 tensorflow
 xgboost
+matplotlib
+statsmodels
+pmdarima
