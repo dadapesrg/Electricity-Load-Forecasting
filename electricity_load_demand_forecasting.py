@@ -12,7 +12,7 @@ import keras.optimizers
 
 
 # Load the stock data
-df1 = pd.read_csv('data/Continuous_dataset.csv') 
+df1 = pd.read_csv('data/continuous_dataset.csv') 
 
 # Print the shape of the dataset
 print(df1.info())

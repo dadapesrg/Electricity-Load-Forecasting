@@ -9,7 +9,8 @@ The following models have been added to the project:\
     f. DT: Decision Tree model \   
     g. RF: Random Forest model \
     h. ADA: Ada Boost model \
-    i. LR: Linear Regression model
+    i. LR: Linear Regression model \
+    j. Time series ARIMA model using UK electricity load demand.
    
 The trained models are deployed to the cloud using Google and AWS Cloud infrastructures. 
 The project code directory consists of the following:
