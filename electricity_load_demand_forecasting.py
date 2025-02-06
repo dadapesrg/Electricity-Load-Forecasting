@@ -165,7 +165,6 @@ lstm_test_pred_df = pd.DataFrame({
 
 # Define the learning rate and optimizer
 lr = 0.0003
-adam = keras.optimizers.Adam(lr)
 
 # Define the convolusion neural network (CNN) model for Time Series Forecasting
 adam = keras.optimizers.Adam(lr)
@@ -202,7 +201,7 @@ plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
 plt.savefig('plots/lstm_model.png')
-#plt.show() 
+plt.show() 
 
 # Plotting the actual vs predicted values for the CNN model
 plt.figure(figsize=(10, 6))
@@ -213,12 +212,12 @@ plt.xlabel('Time')
 plt.ylabel('Energy demand)')
 plt.legend()
 plt.savefig('plots/cnn_model.png')
-#plt.show()
+plt.show()
 
 # Plotting the train loss for both models
 plt.figure(figsize=(10, 6))
-plt.plot(lstm_history.history['loss'], label='Train loss')
-plt.plot(cnn_history.history['loss'], label='Train loss')
+plt.plot(lstm_history.history['loss'], label='LSTM Train loss')
+plt.plot(cnn_history.history['loss'], label='CNN Train loss')
 plt.legend(loc='best')
 plt.title('Comparison of Train Loss CNN and LSTM model')
 plt.xlabel('Epochs')

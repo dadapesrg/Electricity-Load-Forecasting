@@ -1,0 +1,303 @@
+# We will use ARIMA, LSTM and CNN model to forecast the electricity demand in the UK. 
+# ARIMA is a time series forecasting model that uses past data to predict future values.  
+# The model has three main parameters: p, d, and q.
+# p: The number of lag observations included in the model (lag order).
+# d: The number of times that the raw observations are differenced (degree of differencing).
+# q: The size of the moving average window (order of moving average).
+# We will use the auto_arima function from the pmdarima library to automatically find the best parameters for the ARIMA model.
+# We will then fit the ARIMA model to the data and forecast the electricity demand for the next 30 days.
+# Finally, we will plot the forecasted demand along with the observed data to visualize the results.
+
+# Import necessary libraries
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+import pmdarima as pm
+from pmdarima.arima import auto_arima, StepwiseContext
+from statsmodels.tsa.stattools import adfuller
+
+import warnings
+warnings.filterwarnings("ignore")
+
+# Load dataset and combine all years data into one dataset
+year = [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+df = pd.read_csv('data/UK_Load_demand_data/demanddata_2011.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
+
+#Use only 2021 to 2025 data to reduce the size of the dataset for ARIMA model
+#df = pd.read_csv('data/UK_Load_demand_data/demanddata_2024.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
+#year = [2025]
+for i in range(len(year)):
+    data_path = f'data/UK_Load_demand_data/demanddata_{year[i]}.csv'    
+    df_year = pd.read_csv(data_path, parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE') 
+    df = pd.concat([df, df_year], ignore_index=False)
+
+# Save the combined dataset
+df.to_csv('data/UK_Load_demand_data/demanddata_2011_2025.csv')
+
+#Exploratory data analysis
+# Check the first few rows of the data
+print(df.head())
+
+# Check the last few rows of the data
+print(df.tail())
+
+# Check the data types of the columns
+print(df.info())
+
+# Check for missing values
+print(df.isnull().sum())
+
+# Check the summary statistics of the data
+print(df.describe())   
+
+# Select the demand column for analysis
+data = df['ND']  # ND is the column for demand
+print(data.head())
+
+# Plot the energy demand data
+# Resample to average values for hourly, daily, weekly and monthly data
+daily_data = data.resample('D').mean()
+weekly_data = data.resample('W').mean() 
+monthly_data = data.resample('M').mean()    
+
+# Plot the energy demand data
+plt.figure(figsize=(12, 6))
+plt.plot(daily_data, label="Daily Energy Demand")
+plt.title("UK Electricity Demand Over Time")
+plt.xlabel("Date")
+plt.ylabel("Demand (MW)")
+plt.legend()
+#plt.savefig('plots/uk_electricity_demand_daily.png')
+plt.show()
+
+# Plot the energy demand data
+plt.figure(figsize=(12, 6))
+plt.plot(weekly_data, label="Weekly Energy Demand")
+plt.title("UK Electricity Demand Over Time")
+plt.xlabel("Date")
+plt.ylabel("Demand (MW)")
+plt.legend()
+#plt.savefig('plots/uk_electricity_demand_weekly.png')
+plt.show()
+
+# Plot the energy demand data
+plt.figure(figsize=(12, 6))
+plt.plot(monthly_data, label="Monthly Energy Demand")
+plt.title("UK Electricity Demand Over Time")
+plt.xlabel("Date")
+plt.ylabel("Demand (MW)")
+plt.legend()
+#plt.savefig('plots/uk_electricity_demand_monthly.png')
+plt.show()
+
+# Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
+def adf_test(series):
+    result = adfuller(series.dropna())
+    print(f'ADF Statistic: {result[0]}')
+    print(f'p-value: {result[1]}')
+    if result[1] <= 0.05:
+        print("The series is stationary.")
+    else:
+        print("The series is NOT stationary, differencing is required.")
+
+# Perform ADF test
+adf_test(data)
+#adf_test(arima_data)
+
+# Create a StepwiseContext with desired constraints
+#with pm.arima.StepwiseContext(max_p=2, max_q=2, max_d=1, max_dur=60):
+#with pm.arima.StepwiseContext(start_p=0, max_p=3, start_q=0, max_q=5, d=None, max_dur=60):
+    # Fit the ARIMA model using auto_arima with stepwise=True
+    #model = pm.auto_arima(data, stepwise=True) 
+ #   auto_model = pm.auto_arima(data, tepwise=True, seasonal=True, m=7, trace=True, suppress_warnings=True)
+ 
+# Auto ARIMA to find best (p, d, q)
+#auto_model = auto_arima(arima_data, seasonal=True, m=7, trace=True, suppress_warnings=True)
+#print(auto_model.summary())
+
+# Use StepwiseContext
+with StepwiseContext():
+    model = auto_arima(
+        data,
+        start_p=0, max_p=5,   # AR terms
+        start_q=0, max_q=5,   # MA terms
+        d=None,               # Auto-detect differencing
+        simple_differencing=True,  # Use simple differencing
+        seasonal=True,       # Seasonal ARIMA
+        m=7,                  # Seasonal period, energy demand has weekly seasonality
+        stepwise=True,        # Stepwise search enabled
+        suppress_warnings=True,
+        error_action="ignore",
+        trace=True
+    )
+#Method for reducing memory
+#simple_differencing=True
+# cache_size=1  # Limits cached models in memory
+#df['value'] = df['value'].astype('float32')
+
+# Summary of best ARIMA model
+print(model.summary())
+
+# Extract best parameters
+#p, d, q = auto_model.order
+p, d, q = model.order
+
+# Fit ARIMA model
+arima_model = ARIMA(data, order=(p, d, q), seasonal_order=(p, d, q, 7))
+model_fit = arima_model.fit()
+
+# Print model summary
+print(model_fit.summary())
+
+# Forecast next 30 days demand
+forecast_steps = 300
+forecast = model_fit.forecast(steps=forecast_steps)
+
+# Plot Forecast
+plt.figure(figsize=(12, 6))
+plt.plot(data, label="Observed")
+plt.plot(pd.date_range(data.index[-1], periods=forecast_steps+1, freq='D')[1:], forecast, label="Forecast", color='red')
+plt.title("UK Electricity Demand Forecast")
+plt.xlabel("Date")
+plt.ylabel("Demand (MW)")
+plt.legend()
+#plt.savefig('plots/uk_electricity_demand_forecast.png')
+plt.show()
+
+#Use deep learning methods
+# Normalize data
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, LSTM, Dropout
+from tensorflow import keras
+
+import warnings
+warnings.filterwarnings("ignore")
+
+scaler = MinMaxScaler(feature_range=(0, 1))
+data_scaled = scaler.fit_transform(data.values.reshape(-1, 1))
+
+# Split into train & test sets (80% train, 20% test)
+train_size = int(len(data_scaled) * 0.85)
+train, test = data_scaled[:train_size], data_scaled[train_size:]
+
+def create_sequences(dataset, time_step=30):
+    X, Y = [], []
+    for i in range(len(dataset) - time_step):
+        X.append(dataset[i:i + time_step])
+        Y.append(dataset[i + time_step])
+    return np.array(X), np.array(Y)
+
+time_step = 30  # Use past 30 days to predict next day
+X_train, Y_train = create_sequences(train, time_step)
+X_test, Y_test = create_sequences(test, time_step)
+
+# Reshape data for LSTM
+X_train = X_train.reshape(X_train.shape[0], X_train.shape[1], 1)
+X_test = X_test.reshape(X_test.shape[0], X_test.shape[1], 1)
+
+# Define LSTM model
+lstm_model = Sequential([
+    LSTM(50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])),
+    LSTM(50, return_sequences=False),
+    Dense(25),
+    Dense(1)
+])
+
+# Compile model
+lstm_model.compile(optimizer='adam', loss='mean_squared_error')
+
+epochs = 50
+batch = 16
+
+# Train the model
+lstm_history= lstm_model.fit(X_train, Y_train, batch_size = batch, epochs = epochs, verbose=2)
+
+# Predict
+lstm_y_pred = lstm_model.predict(X_test)
+
+# Inverse transform the predictions and actual values to original scales
+lstm_pred = scaler.inverse_transform(lstm_y_pred)  # Convert back to original scale
+
+# Plot results
+plt.figure(figsize=(12, 6))
+plt.plot(data.index[-len(Y_test):], scaler.inverse_transform(Y_test.reshape(-1, 1)), label="Actual Demand")
+plt.plot(data.index[-len(lstm_pred):], lstm_pred, label="LSTM Forecast", linestyle='--')
+plt.title("UK Electricity Demand Forecast (LSTM)")
+plt.xlabel("Date")
+plt.ylabel("Demand (MW)")
+plt.legend()
+plt.show()
+
+#Define CNN model
+# Define the learning rate and optimizer
+lr = 0.0003
+
+# Define the convolusion neural network (CNN) model for Time Series Forecasting
+adam = keras.optimizers.Adam(lr)
+model_cnn = Sequential()
+model_cnn.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(X_train.shape[1], X_train.shape[2])))
+model_cnn.add(MaxPooling1D(pool_size=2))
+model_cnn.add(Flatten())
+model_cnn.add(Dense(50, activation='relu'))
+model_cnn.add(Dense(1))
+model_cnn.compile(loss='mse', optimizer=adam)
+
+# Print model summary
+model_cnn.summary()
+
+# Train the model
+cnn_history = model_cnn.fit(X_train, Y_train, epochs=epochs, batch_size=batch, verbose=2)
+
+# Make predictions on the test set
+cnn_y_pred = model_cnn.predict(X_test)
+
+# Inverse transform the predictions and actual values to original scales
+cnn_pred = scaler.inverse_transform(cnn_y_pred)  # Convert back to original scale
+
+# Evaluate the models
+from sklearn.metrics import r2_score
+R2_Score_lstm = round(r2_score(lstm_y_pred, Y_test) * 100, 2)
+print("R2 Score for LSTM : ", R2_Score_lstm,"%")
+rmse_lstm = np.sqrt(np.mean(lstm_y_pred - Y_test) ** 2)
+print("Root Mean Squared Error for LSTM:", rmse_lstm)
+
+R2_Score_cnn = round(r2_score(cnn_y_pred, Y_test) * 100, 2)
+print("R2 Score for LSTM : ", R2_Score_cnn,"%")
+rmse_lstm = np.sqrt(np.mean(cnn_y_pred - Y_test) ** 2)
+print("Root Mean Squared Error for CNN:", rmse_lstm)
+
+# Visualize the predictions
+fig, axes = plt.subplots(2, 1, sharex=True, sharey=True,figsize=(22,12))
+fig.suptitle('UK Electricity Demand Forecast')
+fig.supxlabel('Time')
+fig.supylabel('Demand (MW)')
+ax1 = axes[0]
+ax2 = axes[1]
+
+ax1.plot(data.index[-len(Y_test):], scaler.inverse_transform(Y_test.reshape(-1, 1)), label="Actual Demand")
+ax1.plot(data.index[-len(lstm_pred):], lstm_pred, label="LSTM Forecast", linestyle='--')
+
+ax2.plot(data.index[-len(Y_test):], scaler.inverse_transform(Y_test.reshape(-1, 1)), label="Actual Demand")
+ax2.plot(data.index[-len(cnn_pred):], cnn_pred, label="CNN Forecast", linestyle='--')
+
+ax1.legend(loc='best')
+ax2.legend(loc='best')   
+ax1.set_title('LSTM Predictions')
+ax2.set_title('CNN Predictions')
+   
+
+
+# Plotting the train loss for both models
+plt.figure(figsize=(10, 6))
+plt.plot(lstm_history.history['loss'], label='LSTM Train loss')
+plt.plot(cnn_history.history['loss'], label='CNN Train loss')
+plt.legend(loc='best')
+plt.title('Comparison of Train Loss CNN and LSTM model')
+plt.xlabel('Epochs')
+plt.ylabel('MSE')
+plt.show()
