@@ -66,7 +66,8 @@ plt.title("UK Electricity Demand Over Time")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-plt.show()
+plt.savefig('plots/uk_electricity_demand_daily.png')
+#plt.show()
 
 # Plot the energy demand data
 plt.figure(figsize=(12, 6))
@@ -75,7 +76,8 @@ plt.title("UK Electricity Demand Over Time")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-plt.show()
+plt.savefig('plots/uk_electricity_demand_weekly.png')
+#plt.show()
 
 # Plot the energy demand data
 plt.figure(figsize=(12, 6))
@@ -84,7 +86,8 @@ plt.title("UK Electricity Demand Over Time")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-plt.show()
+plt.savefig('plots/uk_electricity_demand_monthly.png')
+#plt.show()
 
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
 def adf_test(series):
@@ -125,6 +128,7 @@ plt.title("UK Electricity Demand Forecast")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-plt.show()
+plt.savefig('plots/uk_electricity_demand_forecast.png')
+#plt.show()
 
 
