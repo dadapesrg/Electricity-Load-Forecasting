@@ -16,6 +16,7 @@ from statsmodels.tsa.arima.model import ARIMA
 import pmdarima as pm
 from pmdarima.arima import auto_arima, StepwiseContext
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from sklearn.metrics import mean_squared_error
 from math import sqrt
 
@@ -59,11 +60,8 @@ print(data.head())
 daily_data = data.resample('D').mean()
 
 # Visualise acf and pacf
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-plt.figure(figsize=(12, 6))
-plt.plot(daily_data)
-plot_acf(daily_data, lags=40)
-plot_pacf(daily_data, lags=40)
+plot_acf(daily_data)
+plot_pacf(daily_data)
 plt.show()
 
 # Plot the energy demand data
@@ -88,21 +86,23 @@ def adf_test(series):
 	else:		
 		print("The series is NOT stationary, differencing is required.")
 	return is_stationary 
-    
+   
+# Use StepwiseContext to estimate the arima model order   
 def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, 
-					seasonal_p=None, is_stationary=False, stepwise=False):
-
-	# Use StepwiseContext
+					seasonal_p=None, is_stationary=False, stepwise=False):	
 	if is_stationary:
-		seasonal_p = 0				
+		seasonal_p = 0
+		seasonal = False
+	else:
+		seasonal = True				
 	with StepwiseContext():
 		best_model = auto_arima(
 			dataset,
 			start_p=0, max_p=max_p,   # AR terms
 			start_q=0, max_q=max_q,   # MA terms
 			start_d=0, max_d=max_d,    # Auto-detect differencing
-			# simple_differencing=True,  # Use simple differencing
-			seasonal=False,       # Seasonal ARIMA
+			simple_differencing=True,  # Use simple differencing
+			seasonal=seasonal,       # Seasonal ARIMA
        		m=seasonal_p,           # Seasonal period, energy demand has weekly seasonality
 			stepwise=stepwise,        # Stepwise search 
 			suppress_warnings=True,
@@ -112,7 +112,8 @@ def evaluate_models(dataset, max_p=None, max_d=None, max_q=None,
    		)
 		return best_model
 		
-# walk-forward validation
+
+# Define function to fit and evaluate the model
 def fit_and_evaluate_arima_model(X_train, X_test, arima_order):
 	history = [x for x in X_train]
 	predictions = list()
@@ -127,11 +128,11 @@ def fit_and_evaluate_arima_model(X_train, X_test, arima_order):
 		print('predicted=%f, expected=%f' % (yhat, obs))
 	return model_fit, predictions
 
-# Perform ADF test
+# Perform ADF test to check station
 is_stationary = adf_test(daily_data)
 
 #Evaluate arima model to determine the order
-best_model = evaluate_models(daily_data, max_p=10, max_d=5, max_q=10, 
+best_model = evaluate_models(daily_data, max_p=8, max_d=2, max_q=8, 
 							 seasonal_p=7, is_stationary=is_stationary, stepwise=True)
 
 # Summary of best ARIMA model
@@ -151,17 +152,6 @@ model_fit, predictions = fit_and_evaluate_arima_model(X_train, X_test,  best_mod
 rmse = sqrt(mean_squared_error(X_test, predictions))
 print('Test RMSE: %.3f' % rmse)
 
-# plot forecasts against actual outcomes
-plt.figure(figsize=(12, 6))
-plt.plot(X_test, label="Observed", linestyle='--', color='blue')
-#plt.plot(pd.date_range(daily_data.index[-1], periods=len(X_test)+1, freq='D')[1:], predictions)
-plt.plot(predictions, label="Forecast", color='red')
-plt.title("UK Electricity Demand Forecast")
-plt.xlabel("Date")
-plt.ylabel("Demand (MW)")
-plt.legend()
-plt.show()
-
 # line plot of residuals
 residuals = pd.DataFrame(model_fit.resid)
 residuals.plot()
@@ -176,16 +166,15 @@ print(residuals.describe())
 print(model_fit.summary())
 
 # Forecast next 30 days demand
-forecast_steps = 30
+forecast_steps = 300
 forecast = model_fit.forecast(steps=forecast_steps)
 
-# Plot Forecast
+# plot forecasts against actual outcomes
 plt.figure(figsize=(12, 6))
-plt.plot(daily_data[4700:], label="Observed", linestyle='--', color='blue')
-plt.plot(pd.date_range(daily_data.index[-1], periods=forecast_steps+1, freq='D')[1:], forecast, label="Forecast", color='red')
+plt.plot(X_test, label="Observed", linestyle='--', color='blue')
+plt.plot(predictions, label="Forecast", color='red')
 plt.title("UK Electricity Demand Forecast")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-#plt.savefig('plots/uk_electricity_demand_forecast.png')
 plt.show()
