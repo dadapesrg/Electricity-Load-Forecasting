@@ -58,7 +58,14 @@ print(data.head())
 # Resample to average values for daily data
 daily_data = data.resample('D').mean()
 
-"""
+# Visualise acf and pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+plt.figure(figsize=(12, 6))
+plt.plot(daily_data)
+plot_acf(daily_data, lags=40)
+plot_pacf(daily_data, lags=40)
+plt.show()
+
 # Plot the energy demand data
 plt.figure(figsize=(12, 6))
 plt.plot(daily_data, label="Daily Energy Demand")
@@ -68,7 +75,7 @@ plt.ylabel("Demand (MW)")
 plt.legend()
 #plt.savefig('plots/uk_electricity_demand_daily.png')
 plt.show()
-"""
+
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
 def adf_test(series):
 	is_stationary = False
@@ -82,7 +89,9 @@ def adf_test(series):
 		print("The series is NOT stationary, differencing is required.")
 	return is_stationary 
     
-def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, seasonal_p=None, is_stationary=False):
+def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, 
+					seasonal_p=None, is_stationary=False, stepwise=False):
+
 	# Use StepwiseContext
 	if is_stationary:
 		seasonal_p = 0				
@@ -94,8 +103,8 @@ def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, seasonal_p=None
 			start_d=0, max_d=max_d,    # Auto-detect differencing
 			# simple_differencing=True,  # Use simple differencing
 			seasonal=False,       # Seasonal ARIMA
-       		m=seasonal_p,                  # Seasonal period, energy demand has weekly seasonality
-			stepwise=True,        # Stepwise search enabled
+       		m=seasonal_p,           # Seasonal period, energy demand has weekly seasonality
+			stepwise=stepwise,        # Stepwise search 
 			suppress_warnings=True,
 			error_action="ignore",
 			cache_size=1,
@@ -104,7 +113,7 @@ def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, seasonal_p=None
 		return best_model
 		
 # walk-forward validation
-def evaluate_arima_model(X_train, X_test, arima_order):
+def fit_and_evaluate_arima_model(X_train, X_test, arima_order):
 	history = [x for x in X_train]
 	predictions = list()
 	for t in range(len(X_test)):
@@ -121,8 +130,11 @@ def evaluate_arima_model(X_train, X_test, arima_order):
 # Perform ADF test
 is_stationary = adf_test(daily_data)
 
+#Evaluate arima model to determine the order
+best_model = evaluate_models(daily_data, max_p=10, max_d=5, max_q=10, 
+							 seasonal_p=7, is_stationary=is_stationary, stepwise=True)
+
 # Summary of best ARIMA model
-best_model = evaluate_models(daily_data, max_p=3, max_d=3, max_q=3, seasonal_p=30, is_stationary=is_stationary)
 print(best_model.summary())
 
 #Split the dataset into train
@@ -132,28 +144,23 @@ X_train, X_test = X[0:size], X[size:len(X)]
 
 # Extract best parameters
 # Print the parameters of the best model
-print("My order:", best_model.order)
-model_fit, predictions = evaluate_arima_model(X_train, X_test,  best_model.order)
+print("The order of best model is:", best_model.order)
+model_fit, predictions = fit_and_evaluate_arima_model(X_train, X_test,  best_model.order)
 
 # evaluate forecasts
 rmse = sqrt(mean_squared_error(X_test, predictions))
 print('Test RMSE: %.3f' % rmse)
+
 # plot forecasts against actual outcomes
 plt.figure(figsize=(12, 6))
 plt.plot(X_test, label="Observed", linestyle='--', color='blue')
-plt.plot(pd.date_range(daily_data.index[-1], periods=len(X_test)+1, freq='D')[1:], predictions)
-#plt.plot(predictions, color='red')
+#plt.plot(pd.date_range(daily_data.index[-1], periods=len(X_test)+1, freq='D')[1:], predictions)
+plt.plot(predictions, label="Forecast", color='red')
 plt.title("UK Electricity Demand Forecast")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
 plt.show()
-
-
-# Fit ARIMA model
-#arima_model = ARIMA(daily_data, order=(p, d, q), seasonal_order=(p, d, q, 30))
-#arima_model = ARIMA(daily_data, order=(1, 1, 1), seasonal_order=(2, 0, 0, 30))
-#model_fit = arima_model.fit()
 
 # line plot of residuals
 residuals = pd.DataFrame(model_fit.resid)
