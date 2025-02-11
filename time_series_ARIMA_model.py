@@ -169,12 +169,12 @@ print(model_fit.summary())
 forecast_steps = 300
 forecast = model_fit.forecast(steps=forecast_steps)
 
-# plot forecasts against actual outcomes
+# Plot forecasts against actual outcomes
+x = np.arange(X_test.shape[0])
 plt.figure(figsize=(12, 6))
-plt.plot(X_test, label="Observed", linestyle='--', color='blue')
-plt.plot(predictions, label="Forecast", color='red')
-plt.title("UK Electricity Demand Forecast")
-plt.xlabel("Date")
+plt.scatter(x, X_test, label="Observed", linestyle='--', color='blue', marker='x')
+plt.plot(x, predictions, label="Forecast", color='red')
+plt.title("Electricity Load Demand")
 plt.ylabel("Demand (MW)")
 plt.legend()
 plt.show()

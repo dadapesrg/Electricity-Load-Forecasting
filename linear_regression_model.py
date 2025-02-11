@@ -12,35 +12,35 @@ import matplotlib.pyplot as plt
 
 
 # Load the stock data
-df1 = pd.read_csv('data/Continuous_dataset.csv') 
+df = pd.read_csv('data/Continuous_dataset.csv') 
 
 # Print the shape of the dataset
-print(df1.info())
+print(df.info())
 # Print the first 5 rows
-print(df1.head())
+print(df.head())
 
 # Print the last 5 rows
-print(df1.tail())
+print(df.tail())
 
 # Use the specified features of the continous dataset
 features = ['datetime','nat_demand', 'T2M_toc','QV2M_toc',	'TQL_toc',	'W2M_toc', 'T2M_san', 'QV2M_san',\
 'TQL_san',	'W2M_san',	'T2M_dav',	'QV2M_dav',	'TQL_dav',	'W2M_dav']
 
-df = df1[features]
-print(df.head)
+data_df = df[features]
+print(data_df.head)
 
 # Set 'Date' as the index
-df.set_index('datetime', inplace=True)
+data_df.set_index('datetime', inplace=True)
 
-print("Sample Data:\n", df.head())
+print("Sample Data:\n", data_df.head())
 
 # Define the split point
 split_fraction = 0.8
-split_index = int(len(df) * split_fraction)
+split_index = int(len(data_df) * split_fraction)
 
 # Split the data
-train_df = df.iloc[:split_index]
-test_df = df.iloc[split_index:]
+train_df = data_df.iloc[:split_index]
+test_df = data_df.iloc[split_index:]
 
 print("Training Data:\n", train_df.tail())
 print("\nTesting Data:\n", test_df.head())
