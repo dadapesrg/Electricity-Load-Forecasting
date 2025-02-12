@@ -12,7 +12,7 @@ from automodelselector.machine_learning_model_selector import MLRegressionModelS
 # AutoModelSelector
 
 # Load the stock data
-df = pd.read_csv('data/Continuous_dataset.csv') 
+df = pd.read_csv('data/continuous_dataset.csv') 
 
 # Print the shape of the dataset
 print(df.info())
