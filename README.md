@@ -6,7 +6,7 @@ The following models have been added to the project:\
     c. GB: Gradient Boosting model \
     d. RF: Random Forest model \
     e. XGB: Extreme Gradient Boost model with hyperparameters tuning \
-    f. DT: Decision Tree model \   
+    f. DT: Decision Tree model \
     g. RF: Random Forest model \
     h. ADA: Ada Boost model \
     i. LR: Linear Regression model \
