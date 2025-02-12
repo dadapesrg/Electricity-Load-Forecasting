@@ -14,7 +14,7 @@ The following models have been added to the project:\
    
 The trained models are deployed to the cloud using Google and AWS Cloud infrastructures. 
 The project code directory consists of the following:
-1. automodelselector: Package/module developed to automatically select machine learning model for a given dataset. 
+1. automodelselector: Package/module developed to automatically select the best machine learning model for a given dataset. 
 2. data: Store the data for training the models. The data used for the project was obtained from https://www.kaggle.com/ and UK electricity load demand was obtained from https://www.neso.energy/data-portal
 3. results: Store the models after the training and validation
 4. app.py: Flask APP for serving the models in deployment. It uses the stored AI models to serve the request and make predictions.
