@@ -58,8 +58,7 @@ df['ND'] = df['ND'].astype('float32')
 data = df['ND']  # ND is the column for demand
 print(data.head())
 
-# Plot the energy demand data
-# Resample to average values for daily data
+# Resample to average values for weekly data to reduce the size of the dataset
 data = data.resample('W').mean()
 daily_data = data.copy()
 
@@ -121,14 +120,15 @@ X = data.values
 size = int(len(X) * 0.8)
 X_train, X_test = X[0:size], X[size:len(X)]
 
+"""
 # Evaluate arima model to determine the order
 #auto_model = auto_arima(data,start_p=1,start_q=1, d=max_d, test='adf', m=seasonal_p,D=max_d, seasonal_test='ocsb', stepwise=True, seasonal=True,trace=True)
 
 # Summary of best ARIMA model
-#print(auto_model.summary())
-#arima_order = auto_model.order
-#seasonal_order = auto_model.seasonal_order
-
+print(auto_model.summary())
+arima_order = auto_model.order
+seasonal_order = auto_model.seasonal_order
+"""
 #r2 = 0.82
 #arima_order = (0,1,1)
 #seasonal_order = (0,1,1,seasonal_p)
@@ -159,35 +159,30 @@ print(residuals.describe())
 print(model_fit.summary())
 
 # Forecast solar generation using the test data
-# Forecast solar generation using the test data
-forecast_steps = len(X) - size
-predictions = model_fit.forecast(steps=forecast_steps)
-print(predictions)
-
-forecast_steps = len(X) - size +52
+forecast_steps = len(X) - size 
 forecast = model_fit.forecast(steps=forecast_steps)
 print(forecast)
 
-# Plot forecasts against actual outcomes
-plt.figure(figsize=(12, 6))
-plt.plot(pd.date_range(data[size:len(X)].index[-1], freq= 'D', periods=(len(X) - size)), X_test, label="Actual")
-plt.plot(pd.date_range(data[size:len(X)].index[-1], freq= 'D', periods=forecast_steps), forecast, label="Prediction")
-plt.title("UK Embedded Solar Generation Forecast")
-plt.title("Electricity Load Demand Actual and Forecast")
-plt.xlabel("Date ")
+# Plot the results with specified colors
+plt.figure(figsize=(14,7))
+plt.plot(data.iloc[:size].index, X_train, label='Train', color='#203147')
+plt.plot(data.iloc[size:].index, X_test, label='Test', color='#01ef63')
+plt.plot(data.iloc[size:].index, forecast, label='Forecast', color='orange')
+plt.title("Electricity Load Demand Forecast")
+plt.xlabel("Date")
 plt.ylabel("Electricity Load Demand (MW)")
 plt.legend()
 plt.show()
 
 # Evaluate forecasts
-rmse = sqrt(mean_squared_error(X_test, predictions))
+rmse = sqrt(mean_squared_error(X_test, forecast))
 print('Test RMSE: %.3f' % rmse)
 
-r2 = r2_score(X_test, predictions)
-mse = mean_squared_error(X_test, predictions)
+r2 = r2_score(X_test, forecast)
+mse = mean_squared_error(X_test, forecast)
 rmse = np.sqrt(mse)
 rmse = float("{:.4f}".format(rmse))         
-mae = mean_absolute_error(X_test, predictions)
+mae = mean_absolute_error(X_test, forecast)
 
 print(f'R2: {r2:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, MAE: {mae:.2f}')
 
