@@ -25,7 +25,7 @@ The project code directory consists of the following:
 7. Dockerfile: For building the image for the Docker container.
 8. requirements.txt: Contains the libraries neccessary to build the image for the container
 9. plots: For the generated models' comaprison plots 
-10. time_series_ARIMA_model.py: Module for time series model developed for UK electricity load demand using arima.
+10. electricity_UK_load_demand_forecasting.py: Module for time series model developed for UK electricity load demand using arima.
 11. time_series_arima_lstm_cnn_model.py: Module for time series model developed for UK electricity load demand using arima, lstm, cnn. 
 
 

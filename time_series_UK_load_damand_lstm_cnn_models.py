@@ -1,23 +1,14 @@
-# We will use ARIMA, LSTM and CNN model to forecast the electricity demand in the UK. 
-# ARIMA is a time series forecasting model that uses past data to predict future values.  
-# The model has three main parameters: p, d, and q.
-# p: The number of lag observations included in the model (lag order).
-# d: The number of times that the raw observations are differenced (degree of differencing).
-# q: The size of the moving average window (order of moving average).
-# We will use the auto_arima function from the pmdarima library to automatically find the best parameters for the ARIMA model.
-# We will then fit the ARIMA model to the data and forecast the electricity demand for the next 30 days.
-# Finally, we will plot the forecasted demand along with the observed data to visualize the results.
+# We will use LSTM and CNN model to forecast the electricity load demand in the UK. 
+# LSTM is a recurrent neural network that uses past data to predict future values.  
+# CNN is a convolutional neural network that uses past data to predict future values.  
+# The model has two main parameters: time_step and batch.
+# time_step: The number of time steps to use as input to the model (lag order).
+# batch: The batch size to use when training the model.
 
 # Import necessary libraries
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from statsmodels.tsa.arima.model import ARIMA
-import pmdarima as pm
-from pmdarima.arima import auto_arima, StepwiseContext
-from statsmodels.tsa.stattools import adfuller
-
-#Use deep learning methods
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, LSTM, Dropout
@@ -29,10 +20,6 @@ warnings.filterwarnings("ignore")
 # Load dataset and combine all years data into one dataset
 year = [2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
 df = pd.read_csv('data/UK_Load_demand_data/demanddata_2011.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
-
-#Use only 2021 to 2025 data to reduce the size of the dataset for ARIMA model
-#df = pd.read_csv('data/UK_Load_demand_data/demanddata_2024.csv', parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE')
-#year = [2025]
 for i in range(len(year)):
     data_path = f'data/UK_Load_demand_data/demanddata_{year[i]}.csv'    
     df_year = pd.read_csv(data_path, parse_dates=['SETTLEMENT_DATE'], index_col='SETTLEMENT_DATE') 

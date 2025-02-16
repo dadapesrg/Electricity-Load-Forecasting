@@ -13,11 +13,14 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
 import pmdarima as pm
 from pmdarima.arima import auto_arima, StepwiseContext
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.seasonal import seasonal_decompose
+from sklearn.metrics import r2_score,  mean_squared_error, mean_absolute_error
+from pandas.plotting import autocorrelation_plot
 from math import sqrt
 
 import warnings
@@ -57,21 +60,31 @@ print(data.head())
 
 # Plot the energy demand data
 # Resample to average values for daily data
-daily_data = data.resample('D').mean()
+data = data.resample('W').mean()
+daily_data = data.copy()
 
-# Visualise acf and pacf
-plot_acf(daily_data)
-plot_pacf(daily_data)
-plt.show()
-
-# Plot the energy demand data
+# Plot the electricity load demand data
 plt.figure(figsize=(12, 6))
-plt.plot(daily_data, label="Daily Energy Demand")
+plt.plot(data, label="Monthly Electricity Demand")
 plt.title("UK Electricity Demand Over Time")
 plt.xlabel("Date")
 plt.ylabel("Demand (MW)")
 plt.legend()
-#plt.savefig('plots/uk_electricity_demand_daily.png')
+plt.show()
+
+# Plot the autocorrelation
+autocorrelation_plot(data)
+plt.show()
+
+# Visualise acf and pacf
+plot_acf(data)
+plot_pacf(data)
+plt.show()
+
+# Visualise the seasonal decomposition 
+seasonal_p = 52
+decomposition=seasonal_decompose(data, model='additive', period=seasonal_p)
+decomposition.plot()
 plt.show()
 
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
@@ -86,95 +99,95 @@ def adf_test(series):
 	else:		
 		print("The series is NOT stationary, differencing is required.")
 	return is_stationary 
-   
-# Use StepwiseContext to estimate the arima model order   
-def evaluate_models(dataset, max_p=None, max_d=None, max_q=None, 
-					seasonal_p=None, is_stationary=False, stepwise=False):	
-	if is_stationary:
-		seasonal_p = 0
-		seasonal = False
-	else:
-		seasonal = True				
-	with StepwiseContext():
-		best_model = auto_arima(
-			dataset,
-			start_p=0, max_p=max_p,   # AR terms
-			start_q=0, max_q=max_q,   # MA terms
-			start_d=0, max_d=max_d,    # Auto-detect differencing
-			simple_differencing=True,  # Use simple differencing
-			seasonal=seasonal,       # Seasonal ARIMA
-       		m=seasonal_p,           # Seasonal period, energy demand has weekly seasonality
-			stepwise=stepwise,        # Stepwise search 
-			suppress_warnings=True,
-			error_action="ignore",
-			cache_size=1,
-			trace=True
-   		)
-		return best_model
-		
 
-# Define function to fit and evaluate the model
-def fit_and_evaluate_arima_model(X_train, X_test, arima_order):
-	history = [x for x in X_train]
-	predictions = list()
-	for t in range(len(X_test)):
-		model = ARIMA(history, order= arima_order) 
-		model_fit = model.fit()
-		output = model_fit.forecast()
-		yhat = output[0]
-		predictions.append(yhat)
-		obs = X_test[t]
-		history.append(obs)
-		print('predicted=%f, expected=%f' % (yhat, obs))
-	return model_fit, predictions
+is_stationary = adf_test(data)
 
-# Perform ADF test to check station
-is_stationary = adf_test(daily_data)
+# Perform differencing if data is Not stationary
+max_d = 0
+if not is_stationary:
+	data_diff = data.diff().dropna()
+	plot_acf(data_diff, lags=50)
+	plot_pacf(data_diff, lags=50)
+	plt.show()	
+	seasonal_data_diff = data_diff.diff(seasonal_p).dropna()
+	plot_acf(seasonal_data_diff, lags=seasonal_p)
+	plot_pacf(seasonal_data_diff, lags=seasonal_p)
+	plt.show()
+	max_d = max_d + 1
+	is_stationary = adf_test(data_diff)	
 
-#Evaluate arima model to determine the order
-best_model = evaluate_models(daily_data, max_p=8, max_d=2, max_q=8, 
-							 seasonal_p=7, is_stationary=is_stationary, stepwise=True)
-
-# Summary of best ARIMA model
-print(best_model.summary())
-
-#Split the dataset into train
-X = daily_data.values
-size = int(len(X) * 0.90)
+# Split the dataset into train and test set
+X = data.values
+size = int(len(X) * 0.8)
 X_train, X_test = X[0:size], X[size:len(X)]
 
-# Extract best parameters
-# Print the parameters of the best model
-print("The order of best model is:", best_model.order)
-model_fit, predictions = fit_and_evaluate_arima_model(X_train, X_test,  best_model.order)
+# Evaluate arima model to determine the order
+#auto_model = auto_arima(data,start_p=1,start_q=1, d=max_d, test='adf', m=seasonal_p,D=max_d, seasonal_test='ocsb', stepwise=True, seasonal=True,trace=True)
 
-# evaluate forecasts
-rmse = sqrt(mean_squared_error(X_test, predictions))
-print('Test RMSE: %.3f' % rmse)
+# Summary of best ARIMA model
+#print(auto_model.summary())
+#arima_order = auto_model.order
+#seasonal_order = auto_model.seasonal_order
 
-# line plot of residuals
+#r2 = 0.82
+#arima_order = (0,1,1)
+#seasonal_order = (0,1,1,seasonal_p)
+# r2 = 0.84
+# arima_order = (1,1,1)
+#seasonal_order = (1,1,1,seasonal_p)	
+
+arima_order = (2,1,2)
+seasonal_order = (1,1,1,seasonal_p)
+
+# Fit ARIMA model
+model = SARIMAX(X_train, order= arima_order, seasonal_order=seasonal_order) 
+model_fit = model.fit()
+
+# Line plot of residuals
 residuals = pd.DataFrame(model_fit.resid)
 residuals.plot()
 plt.show()
-# density plot of residuals
+
+# Density plot of residuals
 residuals.plot(kind='kde')
 plt.show()
-# summary stats of residuals
+
+# Summary stats of residuals
 print(residuals.describe())
 
 # Print model summary
 print(model_fit.summary())
 
-# Forecast next 30 days demand
-forecast_steps = 300
+# Forecast solar generation using the test data
+# Forecast solar generation using the test data
+forecast_steps = len(X) - size
+predictions = model_fit.forecast(steps=forecast_steps)
+print(predictions)
+
+forecast_steps = len(X) - size +52
 forecast = model_fit.forecast(steps=forecast_steps)
+print(forecast)
 
 # Plot forecasts against actual outcomes
-x = np.arange(X_test.shape[0])
 plt.figure(figsize=(12, 6))
-plt.scatter(x, X_test, label="Observed", linestyle='--', color='blue', marker='x')
-plt.plot(x, predictions, label="Forecast", color='red')
-plt.title("Electricity Load Demand")
-plt.ylabel("Demand (MW)")
+plt.plot(pd.date_range(data[size:len(X)].index[-1], freq= 'D', periods=(len(X) - size)), X_test, label="Actual")
+plt.plot(pd.date_range(data[size:len(X)].index[-1], freq= 'D', periods=forecast_steps), forecast, label="Prediction")
+plt.title("UK Embedded Solar Generation Forecast")
+plt.title("Electricity Load Demand Actual and Forecast")
+plt.xlabel("Date ")
+plt.ylabel("Electricity Load Demand (MW)")
 plt.legend()
 plt.show()
+
+# Evaluate forecasts
+rmse = sqrt(mean_squared_error(X_test, predictions))
+print('Test RMSE: %.3f' % rmse)
+
+r2 = r2_score(X_test, predictions)
+mse = mean_squared_error(X_test, predictions)
+rmse = np.sqrt(mse)
+rmse = float("{:.4f}".format(rmse))         
+mae = mean_absolute_error(X_test, predictions)
+
+print(f'R2: {r2:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, MAE: {mae:.2f}')
+
