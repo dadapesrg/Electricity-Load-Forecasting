@@ -81,11 +81,22 @@ plot_acf(data)
 plot_pacf(data)
 plt.show()
 
-# Visualise the seasonal decomposition 
-seasonal_p = 52
-decomposition=seasonal_decompose(data, model='additive', period=seasonal_p)
+# Visualise the seasonal decomposition of the data
+decomposition = seasonal_decompose(data, model='additive') 
 decomposition.plot()
 plt.show()
+
+seasonal_p = 52 # Seasonal period is 52 weeks
+D = 1  # Seasonal differencing term
+
+# Estimate number of seasonal differences using a Canova-Hansen test
+#D = nsdiffs(data, m= seasonal_p, max_D=3, test='ch')  
+print(f"Estimated seasonal differencing term (D): {D}")
+
+# Split the dataset into train and test set
+X = data.values
+size = int(len(X) * 0.8)
+X_train, X_test = X[0:size], X[size:len(X)]
 
 # Perform Augmented Dickey-Fuller (ADF)test to check for stationarity
 def adf_test(series):
@@ -102,42 +113,42 @@ def adf_test(series):
 
 is_stationary = adf_test(data)
 
-# Perform differencing if data is Not stationary
+# Perform differencing if data is Not stationary to make it stationary and determine max_d
 max_d = 0
 if not is_stationary:
+	max_d = max_d + 1	
 	data_diff = data.diff().dropna()
-	plot_acf(data_diff, lags=50)
-	plot_pacf(data_diff, lags=50)
-	plt.show()	
-	seasonal_data_diff = data_diff.diff(seasonal_p).dropna()
+	seasonal_data_diff = data_diff.diff(seasonal_p).dropna()	
 	plot_acf(seasonal_data_diff, lags=seasonal_p)
 	plot_pacf(seasonal_data_diff, lags=seasonal_p)
-	plt.show()
-	max_d = max_d + 1
-	is_stationary = adf_test(data_diff)	
-
-# Split the dataset into train and test set
-X = data.values
-size = int(len(X) * 0.8)
-X_train, X_test = X[0:size], X[size:len(X)]
-
-"""
+	plt.show()	
+	
 # Evaluate arima model to determine the order
-#auto_model = auto_arima(data,start_p=1,start_q=1, d=max_d, test='adf', m=seasonal_p,D=max_d, seasonal_test='ocsb', stepwise=True, seasonal=True,trace=True)
+auto_model = auto_arima(data, start_p=0, start_q=0,
+    max_p=3, d=max_d, max_d=2, max_q=3,
+    start_P=1, D=D, start_Q=0, max_P=3, max_D=3,
+    max_Q=3, m = seasonal_p, seasonal=True, 
+    stationary=False,
+    error_action='warn', trace=True,
+    suppress_warnings=True, stepwise=True,
+    random_state=20, n_fits=50)
 
 # Summary of best ARIMA model
 print(auto_model.summary())
 arima_order = auto_model.order
 seasonal_order = auto_model.seasonal_order
-"""
+
+# r2 = 0.84
+#arima_order = (2,1,2)
+#seasonal_order = (2,1,2,seasonal_p)	
 
 # r2 = 0.84
 # arima_order = (1,1,1)
 #seasonal_order = (1,1,1,seasonal_p)	
 
 # r2 = 0.84
-arima_order = (2,1,2)
-seasonal_order = (1,1,1,seasonal_p)
+#arima_order = (2,1,2)
+#seasonal_order = (1,1,1,seasonal_p)
 
 # Fit ARIMA model
 model = SARIMAX(X_train, order= arima_order, seasonal_order=seasonal_order) 
@@ -188,6 +199,6 @@ mae = mean_absolute_error(X_test, forecast)
 print(f'R2: {r2:.2f}, MSE: {mse:.2f}, RMSE: {rmse:.2f}, MAE: {mae:.2f}')
 
 # Save model to disk
-joblib.dump(model, "results/uk_load_demand_arima_model.pkl")
+#joblib.dump(model, "results/uk_load_demand_arima_model.pkl")
 
 
