@@ -142,7 +142,7 @@ model_lstm.add(LSTM(units=50, return_sequences=False))
 model_lstm.add(Dropout(0.2))
 # Add Dense layer
 model_lstm.add(Dense(units=25))
-model_lstm.add(Dense(units=1))  # Output layer, predicting the 'close' price
+model_lstm.add(Dense(units=1))  # Output layer, predicting the national demand
 
 # Compile the model
 model_lstm.compile(optimizer='adam', loss='mean_squared_error')
