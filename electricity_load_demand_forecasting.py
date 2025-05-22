@@ -128,7 +128,7 @@ print("Training Data Shape (X_train):", X_train.shape)
 print("Training Labels Shape (y_train):", y_train.shape)
 
 # Number of epoch and batch size
-epochs = 100
+epochs = 150
 batch = 7
 
 # Define the LSTM model
