@@ -47,8 +47,8 @@ target_column = 'nat_demand'  # The variable to predict
 def create_sequences(dataframe, target_column, time_steps):
     X, y = [], []
     for i in range(len(dataframe) - time_steps):
-        X.append(dataframe.iloc[i : i + time_steps].values) #.drop(columns=[target_column]).values)
-        y.append(dataframe.iloc[i + time_steps][target_column])
+        X.append(dataframe.iloc[i : i + time_steps].values) # Append the sequence of features
+        y.append(dataframe.iloc[i + time_steps][target_column]) # Append the target variable
     return np.array(X), np.array(y)
 
 # Create sequences
