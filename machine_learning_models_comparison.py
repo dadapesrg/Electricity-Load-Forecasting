@@ -1,4 +1,5 @@
 #import the libraries
+import mlflow
 import os
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 import numpy as np
@@ -9,7 +10,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score,  mean_squared_error, mean_absolute_error
 from automodelselector.machine_learning_model_selector import MLRegressionModelSelector
 
-# AutoModelSelector
+# This mlflow autologging will automatically log parameters, metrics, and models
+# for all the models trained using the MLRegressionModelSelector.
+mlflow.autolog()
+
+# This script demonstrates how to use the MLRegressionModelSelector to compare different regression models
+# on a continuous dataset, specifically for electricity load forecasting.
 
 # Load the stock data
 df = pd.read_csv('data/continuous_dataset.csv') 
@@ -71,14 +77,14 @@ print(y.head())
 # Define the model parameters for each regression model
 model_params = {
      'ridge': {'alpha': 1.0},
-     'decision_tree': {'max_depth': 15},
-     'random_forest': {'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 2},
+     'decision_tree': {'max_depth': 1000},
+     'random_forest': {'n_estimators': 100, 'max_depth': 100, 'min_samples_split': 2},
      'linear_regression': {},     
      'gradient_boosting': {'n_estimators': 100, 'max_depth': 15, 'learning_rate': 0.1},
      'xgboost': {'n_estimators': 100, 'max_depth': 15, 'learning_rate': 0.1},
      "ada_boost": {'n_estimators': 100, 'learning_rate': 0.1},
      'svr': {'C': 1.0, 'kernel': 'rbf'},
-     'knn': {'n_neighbors': 5}      
+     'knn': {'n_neighbors': 3}      
 }
 
 # Initialize the MLRegressionModelHandler
