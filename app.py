@@ -18,18 +18,18 @@ with open('results/lstm_model.pkl', 'rb') as f:
 with open('results/cnn_model.pkl', 'rb') as f:
     cnn_model = pickle.load(f)
 
-#the features used for training the model
+#The features used for training the model
 features = ['nat_demand', 'T2M_toc','QV2M_toc',	'TQL_toc',	'W2M_toc', 'T2M_san', 'QV2M_san',\
 'TQL_san',	'W2M_san',	'T2M_dav',	'QV2M_dav',	'TQL_dav',	'W2M_dav']
 
 # Initialize the scaler
 scaler = MinMaxScaler() #feature_range=(0, 1))
 
-#load the scaler used for training the model
+#Load the scaler used for training the model
 with open("results/scaler.pkl", "rb") as infile:
     scaler = pickle.load(infile)
 
- # function to reshape data for LSTM [samples, timesteps, features] prediction as used during the training
+ # The function to reshape data for LSTM [samples, timesteps, features] prediction as used during the training
 def create_sequences(data, target_col, timesteps=5):
     X, y = [], []
     for i in range(len(data) - timesteps):
